@@ -17,6 +17,7 @@ class t3DB:
     def _setupDB(self):
         self.cursor.execute('''CREATE TABLE updates(update_id INTEGER PRIMARY KEY, timestamp VARCHAR(64) NOT NULL, 
                      ticket_number NOT NULL, punched_in BOOLEAN NOT NULL)''')
+        self.cursor.execute('''CREATE TABLE tickets(ticket_number INTEGER PRIMARY KEY, open INTEGER)''')
         self.conn.commit()
         
     def currentTicket(self):
@@ -29,32 +30,44 @@ class t3DB:
                      'punched_in':result[0][3]
                    }
         else:
-            return False
+            return {}
 
     def update(self, ticket, punch):
         self.cursor.execute('''INSERT INTO updates(timestamp, ticket_number, punched_in)
                                VALUES( ?, ?, ? )''', (time(), ticket, punch))
+        self.topen(ticket)
+        self.conn.commit()
+
+    def close(self, ticket):
+        self.cursor.execute('''REPLACE INTO tickets(ticket_number, open) VALUES(?, 0)''', (ticket,))
+        self.conn.commit()
+
+    def topen(self, ticket):
+        self.cursor.execute('''REPLACE INTO tickets(ticket_number, open) VALUES(?, '1')''', (ticket,))
         self.conn.commit()
 
     def timeForTicket(self, ticket):
         self.cursor.execute('''SELECT timestamp, punched_in FROM updates WHERE ticket_number = ?''', (ticket,))
         results = self.cursor.fetchall()
-        time = 0
+        ttime = 0
         timestamp = float(results[0][0])
         counting = False
         for result in results:
             if(result[1] != 1):
                 if(counting):
-                    time = time + (float(result[0]) - timestamp)
+                    ttime = ttime + (float(result[0]) - timestamp)
                 timestamp = float(result[0])
                 counting = False
             elif(result[1] == 1):
                 timestamp = float(result[0])
                 counting = True
-        return time   
+        if results[-1][1] == 1:
+            timenow = time();
+            ttime = ttime + (timenow - timestamp)
+        return ttime   
 
     def getTimeList(self):
-        self.cursor.execute('''SELECT DISTINCT ticket_number FROM updates''')
+        self.cursor.execute('''SELECT DISTINCT updates.ticket_number FROM updates JOIN tickets ON updates.ticket_number = tickets.ticket_number WHERE tickets.open != 0''')
         tickets = self.cursor.fetchall()
         tlist = []
         for ticket in tickets:
