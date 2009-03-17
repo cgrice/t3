@@ -1,3 +1,5 @@
+import os
+
 print 'Checking dependencies...'
 
 can_install = True
@@ -19,6 +21,11 @@ except:
     can_install = False
 
 if can_install:
-    print "\nCopying t3 src to /usr/lib/t3/"
+    print "\nInstalling T3"
+    os.system("mkdir /usr/lib/t3")
+    os.system("cp -r ./lib/*.py /usr/lib/t3/")
+    os.system("chmod a+x /usr/lib/t3/t3.py")
+    os.system("ln -s /usr/lib/t3/t3.py /usr/bin/t3")
+    print "Installed OK"
+    print "Configuration options are in ~/.t3/t3.conf"
     
-
