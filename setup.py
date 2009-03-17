@@ -3,6 +3,7 @@ import os
 print 'Checking dependencies...'
 
 can_install = True
+success = False
 
 try:
     import pysqlite2
@@ -22,10 +23,15 @@ except:
 
 if can_install:
     print "\nInstalling T3"
-    os.system("mkdir /usr/lib/t3")
-    os.system("cp -r ./lib/*.py /usr/lib/t3/")
-    os.system("chmod a+x /usr/lib/t3/t3.py")
-    os.system("ln -s /usr/lib/t3/t3.py /usr/bin/t3")
+    uid = os.geteuid()
+    gid = os.getegid()
+    home = os.path.expanduser('~')
+    os.system("sudo mkdir /usr/lib/t3")
+    os.system("sudo cp -r ./lib/*.py /usr/lib/t3/")
+    os.system("sudo chmod a+x /usr/lib/t3/t3.py")
+    os.system("sudo ln -s /usr/lib/t3/t3.py /usr/bin/t3")
+    os.system(" mkdir ~/.t3")
+    os.system("touch ~/.t3/t3.conf")
     print "Installed OK"
     print "Configuration options are in ~/.t3/t3.conf"
     

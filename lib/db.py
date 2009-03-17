@@ -47,7 +47,7 @@ class t3DB:
         self.conn.commit()
 
     def timeForTicket(self, ticket):
-        self.cursor.execute('''SELECT timestamp, punched_in FROM updates WHERE ticket_number = ?''', (ticket,))
+        self.cursor.execute("SELECT timestamp, punched_in FROM updates WHERE ticket_number = '" + str(ticket) + "'" )
         results = self.cursor.fetchall()
         ttime = 0
         if len(results) < 1:
