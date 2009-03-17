@@ -17,7 +17,7 @@ class t3DB:
     def _setupDB(self):
         self.cursor.execute('''CREATE TABLE updates(update_id INTEGER PRIMARY KEY, timestamp VARCHAR(64) NOT NULL, 
                      ticket_number NOT NULL, punched_in BOOLEAN NOT NULL)''')
-        self.cursor.execute('''CREATE TABLE tickets(ticket_number INTEGER PRIMARY KEY, open INTEGER)''')
+        self.cursor.execute('''CREATE TABLE tickets(ticket_number INTEGER PRIMARY KEY, estimate INTEGER, open INTEGER)''')
         self.conn.commit()
         
     def currentTicket(self):
@@ -27,7 +27,7 @@ class t3DB:
             return { 'update_id':result[0][0],
                      'timestamp':result[0][1],
                      'ticket':result[0][2],
-                     'punched_in':result[0][3]
+                     'punched_in':result[0][3],
                    }
         else:
             return {}
@@ -50,6 +50,8 @@ class t3DB:
         self.cursor.execute('''SELECT timestamp, punched_in FROM updates WHERE ticket_number = ?''', (ticket,))
         results = self.cursor.fetchall()
         ttime = 0
+        if len(results) < 1:
+            return 0
         timestamp = float(results[0][0])
         counting = False
         for result in results:
@@ -71,6 +73,45 @@ class t3DB:
         tickets = self.cursor.fetchall()
         tlist = []
         for ticket in tickets:
-            tlist.append( (ticket[0], self.timeForTicket(ticket[0])) )
+            tlist.append( (ticket[0], self.timeForTicket(ticket[0]), self.getEstimate(ticket[0])) )
+        return tlist
+    
+    def getFullList(self):
+        self.cursor.execute('''SELECT DISTINCT ticket_number FROM tickets 
+WHERE tickets.open != 0''')
+        tickets = self.cursor.fetchall()
+        tlist = []
+        for ticket in tickets:
+            tlist.append( (ticket[0], self.timeForTicket(ticket[0]), self.getEstimate(ticket[0])) )
         return tlist
 
+    def validTicket(self, ticket):
+        self.cursor.execute('''SELECT DISTINCT COUNT(ticket_number) FROM updates WHERE ticket_number = ?''', (ticket,))
+        results = self.cursor.fetchall()
+        if(results[0][0] > 0):
+            return True
+        else:   
+            return False
+
+    def makeEstimate(self, ticket, estimate):
+        if self.validTicket(ticket):
+            self.cursor.execute('''UPDATE tickets SET estimate = ? WHERE ticket_number = ?''', (estimate, ticket))
+            self.conn.commit()
+        else:
+            self.cursor.execute('''INSERT INTO tickets (ticket_number, estimate, open) VALUES (?, ?, ?)''', (ticket, estimate, '1'))
+            self.conn.commit()
+
+    def getEstimate(self, ticket):
+        self.cursor.execute('''SELECT estimate FROM tickets WHERE ticket_number = ?''', (ticket,))
+        r = self.cursor.fetchall()
+        if len(r) < 1:
+            return 1
+        else:
+            if r[0][0] == None:
+                return 0
+            else:
+                return r[0][0]
+
+    def clean(self):
+        self.cursor.execute('''UPDATE tickets SET open = 0 WHERE 1''')
+        self.conn.commit()

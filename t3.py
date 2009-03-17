@@ -4,51 +4,61 @@ import sys
 import os
 from db import t3DB
 import yaml
+from time import time
 
 class t3:
 
     def __init__(self):
+        self.version = '0.1'
         self.cwd = os.getcwd()
         self.db = t3DB(os.path.expanduser('~') + '/.t3/t3.db')
         self.current_ticket = self.db.currentTicket()
         self.conf = yaml.load(open(os.path.expanduser('~') + '/.t3/t3.conf'))
         #self.status = db.Status()
     def main(self, args):
-        for arg in args:
-            if arg == 'init':
+        for arg in args:    
+            if arg == 'status':
+                print ' Ticket Time Tracker v'+self.version
+                print "-----------------------------------------------"
+                if self.punchedIn():
+                    print '  Punched into ticket #' + self.current_ticket['ticket'] + ' for ' + self.lastDiff(self.current_ticket["ticket"])
+                else: 
+                    print '  Punched out'
+                print '-----------------------------------------------'
+                print " Ticket status"
+                print "-----------------------------------------------"
+                self.getList()
+            elif arg == 'init':
                 self.db = t3DB('./' + args[1] + '.db')
                 print 'Created t3 store in ' + os.getcwd()
-                break
-            # checkout - take ownership of a ticket, ready to punch in / punch out
-            if arg == 'co' or arg == 'checkout':
-                self.checkout(args[1])
-                break
-            # punch in - tell t3 that you are working on a specific ticket
-            #            $ t3 pi will punch in to your last used ticket
-            #            $ t3 pi 14 will punch in to ticket 14
-            if arg == 'pi' or arg == 'punch-in':
+            elif arg == 'pi' or arg == 'punch-in':
                 if(len(args) > 1):
-                    self.checkout(args[1])
                     self.punchin(args[1])
                 else:
-                    self.punchin(self.current_ticket)
-                break
-            # punch out - stop working on your current ticket.
-            if arg == 'po' or arg == 'punch-out':
+                    self.punchin(self.current_ticket["ticket"])
+            elif arg == 'po' or arg == 'punch-out':
                 self.punchout()
-                break
-            if arg == 'time':
+            elif arg == 'time':
                 self.getTime(args[1])
-                break
-            if arg == 'list' or arg == 'ls':
+            elif arg == 'list' or arg == 'ls':
                 self.getList()
-                break
-            if arg == 'close':
+            elif arg == 'close':
                 self.close(args[1])
-                break
+            elif arg == 'open':
+                self.topen(args[1])
+            elif arg == 'estimate' or arg == 'est':
+                ticket = args[1]
+                estimate = args[2]
+                self.db.makeEstimate(ticket, estimate)
+            elif arg == 'report':
+                self.report()
+            elif arg == 'purge' or arg == 'clean':
+                self.db.clean()
+            
+                    
 
     def punchedIn(self):
-        if self.current_ticket['punched_in'] == 1:
+        if self.current_ticket and self.current_ticket['punched_in'] == 1:
             return True
         else:
             return False
@@ -58,13 +68,12 @@ class t3:
         self.db.close(ticket)
         print 'Closed ticket #' + ticket + ' - this ticket will not appear on any summaries'        
 
-    def checkout(self, ticket):
-        if self.current_ticket and self.current_ticket['ticket'] != ticket and self.punchedIn():
-            self.punchout()
-        self.current_ticket['ticket'] = ticket
-        print 'Now working on ticket ' + ticket
+    def topen(self, ticket):
+        self.db.topen(ticket)
+        print 'Ticket #' + ticket + ' opened'
 
     def punchin(self, ticket):
+        self.punchout()
         self.db.update(ticket, 1)
         print 'Punching in - ticket #' + ticket
 
@@ -77,24 +86,28 @@ class t3:
 
     def getTime(self, ticket):
         time =  self.db.timeForTicket(ticket)
-        print time
+        return time
 
     def getList(self):
         tlist = self.db.getTimeList()
-        print "Ticket\tTime Spent\tPoints"
-        for tl in tlist:
-            if self.current_ticket['punched_in'] and self.current_ticket['ticket'] == tl[0]:
-                current = "<--\t"
-            else:
-                current = "\t"
-            time = self.formatTime(tl[1])
-            points = self.makePoints(tl[1])
-            print str(tl[0]) + "\t" + time + "\t\t" + str(points) + "\t" + current
+        if len(tlist) < 1:
+            print " No data - awaiting punch in"
+        else:
+            print " Ticket\tTime Spent\tPoints\tEstimated"
+            for tl in tlist:
+                if self.current_ticket['punched_in'] and self.current_ticket['ticket'] == tl[0]:
+                    current = "\t<--\t"
+                else:
+                    current = "\t\t"
+                time = self.formatTime(tl[1])
+                points = self.makePoints(tl[1])
+                estimated = str(self.db.getEstimate(tl[0]))
+                print " " + str(tl[0]) + "\t" + time + "\t\t" + str(points) + "\t" + estimated + "\t" + current
 
     def formatTime(self, time):
         minutes = 0
         hours = 0
-        seconds = time
+        seconds = int(time)
         if seconds > 60:
             minutes = int(time/60)
             seconds = int(round(time - (minutes * 60), 0))
@@ -103,13 +116,43 @@ class t3:
             minutes = minutes - (hours * 60)
         return (str(hours) + ':' + str(minutes) + ':' + str(seconds))
 
-
+    def lastDiff(self, ticket):
+        dtime = time() - float(self.current_ticket['timestamp'])
+        return self.formatTime(dtime)
 
     def makePoints(self, time):
         unit = self.conf['point_unit']
         hours = time / 60 / 60
         pointsdone = hours / unit   
         return round(pointsdone, 1)
+
+    def report(self):
+        tlist = self.db.getFullList()
+        totalpoints = 0
+        totalestimate = 0
+        diff = 0
+        diffs = []
+        for t in tlist:
+            totalpoints += self.makePoints(t[1])   
+            totalestimate += t[2]
+            diffs.append(t[2] - self.makePoints(t[1]))
+        if len(tlist) < 1:
+            print ' No data available'
+            return False
+        print ' Report'
+        print '-----------------------------------------------'
+        print "  Total points estimated: \t" + str(totalestimate)
+        print "  Total points done: \t\t" + str(totalpoints)
+        print "  Total Difference: \t\t" + str(sum(diffs))
+        print "  Average difference: \t\t" + str(sum(diffs) / len(diffs))
+        print '-----------------------------------------------'
+        print ' Breakdown'
+        print '-----------------------------------------------'
+        print " Ticket\tPoints\tEstimated\tDiff"
+        for t in tlist:
+            points = self.makePoints(t[1])
+            diff = t[2] - self.makePoints(t[1])
+            print " " + str(t[0]) + "\t" + str(points) + "\t" + str(t[2]) + "\t\t" + str(diff)
 
 if __name__ == '__main__':
     t = t3()
