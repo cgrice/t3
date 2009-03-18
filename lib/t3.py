@@ -68,7 +68,9 @@ class t3:
     pi [ticket]             - punch in to a ticket and start tracking time
     po                      - punch out of any current tickets
     est [ticket] [estimate] - estimate the amount of points needed for a ticket
-    close [ticket]          - mark a ticket as finished
+    fin [ticket]            - mark a ticket as finished, but don't close it
+    unfin [ticket]          - mark a ticket as unfinished
+    close [ticket]          - mark a ticket as closeed
     open [ticket]           - re-open a closed ticket
     purge                   - close all open tickets
     list | ls               - show currently open tickets
