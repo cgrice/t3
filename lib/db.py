@@ -39,11 +39,11 @@ class t3DB:
         self.conn.commit()
 
     def close(self, ticket):
-        self.cursor.execute('''REPLACE INTO tickets(ticket_number, open) VALUES(?, 0)''', (ticket,))
+        self.cursor.execute('''UPDATE tickets SET open = 0 WHERE ticket_number = ?''', (ticket,))
         self.conn.commit()
 
     def topen(self, ticket):
-        self.cursor.execute('''REPLACE INTO tickets(ticket_number, open) VALUES(?, '1')''', (ticket,))
+        self.cursor.execute('''UPDATE tickets SET open = 1 WHERE ticket_number = ?''', (ticket,))
         self.conn.commit()
 
     def timeForTicket(self, ticket):
