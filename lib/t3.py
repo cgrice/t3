@@ -54,8 +54,23 @@ class t3:
                 self.report()
             elif arg == 'purge' or arg == 'clean':
                 self.db.clean()
+            else:
+                self.help()
+                break
             
-                    
+    def help(self):
+        print "usage: t3 COMMAND [ARGS]"
+        print '''\nThe most commonly used commands are:
+    pi [ticket]             - punch in to a ticket and start tracking time
+    po                      - punch out of any current tickets
+    est [ticket] [estimate] - estimate the amount of points needed for a ticket
+    close [ticket]          - mark a ticket as finished
+    open [ticket]           - re-open a closed ticket
+    purge                   - close all open tickets
+    list | ls               - show currently open tickets
+    status                  - show current ticket status and time spent
+    report                  - generate statistics for all open tickets'''
+    
 
     def punchedIn(self):
         if self.current_ticket and self.current_ticket['punched_in'] == 1:
