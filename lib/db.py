@@ -17,7 +17,7 @@ class t3DB:
     def _setupDB(self):
         self.cursor.execute('''CREATE TABLE updates(update_id INTEGER PRIMARY KEY, timestamp VARCHAR(64) NOT NULL, 
                      ticket_number NOT NULL, punched_in BOOLEAN NOT NULL)''')
-        self.cursor.execute('''CREATE TABLE tickets(ticket_number INTEGER PRIMARY KEY, estimate INTEGER, open INTEGER)''')
+        self.cursor.execute('''CREATE TABLE tickets(ticket_number INTEGER PRIMARY KEY, estimate INTEGER, open INTEGER, complete INTEGER)''')
         self.conn.commit()
         
     def currentTicket(self):
@@ -37,6 +37,15 @@ class t3DB:
                                VALUES( ?, ?, ? )''', (time(), ticket, punch))
         self.topen(ticket)
         self.conn.commit()
+
+    def complete(self, ticket):
+        self.cursor.execute('''UPDATE tickets SET complete = 1 WHERE ticket_number = ?''', (ticket,))
+        self.conn.commit()
+
+    def uncomplete(self, ticket):
+        self.cursor.execute('''UPDATE tickets SET complete = 0 WHERE ticket_number = ?''', (ticket,))
+        self.conn.commit()
+
 
     def close(self, ticket):
         self.cursor.execute('''UPDATE tickets SET open = 0 WHERE ticket_number = ?''', (ticket,))
@@ -77,12 +86,12 @@ class t3DB:
         return tlist
     
     def getFullList(self):
-        self.cursor.execute('''SELECT DISTINCT ticket_number FROM tickets 
+        self.cursor.execute('''SELECT DISTINCT ticket_number, complete FROM tickets 
 WHERE tickets.open != 0''')
         tickets = self.cursor.fetchall()
         tlist = []
         for ticket in tickets:
-            tlist.append( (ticket[0], self.timeForTicket(ticket[0]), self.getEstimate(ticket[0])) )
+            tlist.append( (ticket[0], self.timeForTicket(ticket[0]), self.getEstimate(ticket[0]), ticket[1]) )
         return tlist
 
     def validTicket(self, ticket):

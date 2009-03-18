@@ -54,7 +54,11 @@ class t3:
                 self.report()
             elif arg == 'purge' or arg == 'clean':
                 self.db.clean()
-            else:
+            elif arg == 'fin':
+                self.db.complete(args[1])
+            elif arg == 'unfin':
+                self.db.uncomplete(args[1])
+            elif arg == 'help':
                 self.help()
                 break
             
@@ -163,11 +167,15 @@ class t3:
         print '-----------------------------------------------'
         print ' Breakdown'
         print '-----------------------------------------------'
-        print " Ticket\tPoints\tEstimated\tDiff"
+        print " Ticket\tPoints\tEstimated\tDiff\tDone"
         for t in tlist:
             points = self.makePoints(t[1])
             diff = t[2] - self.makePoints(t[1])
-            print " " + str(t[0]) + "\t" + str(points) + "\t" + str(t[2]) + "\t\t" + str(diff)
+            if t[3] != None and t[3] != 0:
+                fin = '*'
+            else:
+                fin = ''
+            print " " + str(t[0]) + "\t" + str(points) + "\t" + str(t[2]) + "\t\t" + str(diff) + "\t" + fin
 
 if __name__ == '__main__':
     t = t3()
