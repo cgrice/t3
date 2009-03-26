@@ -62,10 +62,31 @@ At the end of an iteration, you can then check how you've done:
      156	0.0	3		3.0
      200	0.0	4		4.0
 
-And then purge your tickets ready for the next iteration:
+You can then clean all tickets, ready for the next iteration. This cannot be
+undone, so make sure you're ready to finish.
 
-    cg@home $ t3 purge
+    cg@home $ t3 clean
 	
+However, you can still access historical data from previous iterations, using
+t3 totals:
+
+    cg@home $ t3 totals
+    + Iteration ended 26/03/2009 at 12:13
+         Ticket	Points
+         20  	0.0
+      Total: 0.0
+    + Iteration ended 26/03/2009 at 12:14
+         Ticket	Points
+         20  	0.1
+         100  	0.0
+      Total: 0.1
+    + Iteration ended 26/03/2009 at 12:16
+         Ticket	Points
+         123  	0.0
+      Total: 0.0
+
+
+    
 
 
     

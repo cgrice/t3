@@ -4,7 +4,8 @@ import sys
 import os
 from db import t3DB
 import yaml
-from time import time
+from time import time, strftime
+from datetime import datetime
 
 class t3:
 
@@ -70,12 +71,11 @@ class t3:
     est [ticket] [estimate] - estimate the amount of points needed for a ticket
     fin [ticket]            - mark a ticket as finished, but don't close it
     unfin [ticket]          - mark a ticket as unfinished
-    close [ticket]          - mark a ticket as closeed
-    open [ticket]           - re-open a closed ticket
-    purge                   - close all open tickets
+    clean                   - finish an iteration and close all tickets
     list | ls               - show currently open tickets
     status                  - show current ticket status and time spent
-    report                  - generate statistics for all open tickets'''
+    report                  - generate statistics for all open tickets
+    totals                  - show statistics for all finished iterations'''
     
 
     def punchedIn(self):
@@ -147,6 +147,33 @@ class t3:
         hours = time / 60 / 60
         pointsdone = hours / unit   
         return round(pointsdone, 1)
+
+    def totals(self):
+        totals = {}
+        tlist = self.db.getAllTickets()
+        for t in tlist:
+            its = self.db.getIterations(t[0])
+            for it in its:
+                if it[0] in totals:
+                    totals[it[0]].append((it[1][0], it[1][1]))
+                else:
+                    totals[it[0]] = []
+                    totals[it[0]].append((it[1][0], it[1][1]))
+        items = totals.items()
+        items.sort()
+        for key, value in items:
+            date = datetime.fromtimestamp(float(key))
+            tickets = totals[key]
+            print "+ Iteration ended " + date.strftime("%d/%m/%Y at %H:%M")
+            print "     Ticket\tPoints"
+            tsum = 0
+            for ticket in tickets:
+                if(ticket[1] == 0):
+                    pass
+                else:
+                    print "     " + str(ticket[0]) + "  \t" + str(self.makePoints(ticket[1]))
+                    tsum += self.makePoints(ticket[1])
+            print "  Total: " + str(tsum)
 
     def report(self):
         tlist = self.db.getFullList()
