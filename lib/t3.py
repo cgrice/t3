@@ -4,7 +4,8 @@ import sys
 import os
 from db import t3DB
 import yaml
-from time import time
+from time import time, strftime
+from datetime import datetime
 
 class t3:
 
@@ -152,10 +153,31 @@ class t3:
         return round(pointsdone, 1)
 
     def totals(self):
+        totals = {}
         tlist = self.db.getAllTickets()
         for t in tlist:
-            print self.db.getIterations(t[0])
-#        iterations = self.db.getIterations()
+            its = self.db.getIterations(t[0])
+            for it in its:
+                if it[0] in totals:
+                    totals[it[0]].append((it[1][0], it[1][1]))
+                else:
+                    totals[it[0]] = []
+                    totals[it[0]].append((it[1][0], it[1][1]))
+        items = totals.items()
+        items.sort()
+        for key, value in items:
+            date = datetime.fromtimestamp(float(key))
+            tickets = totals[key]
+            print "+ Iteration ended " + date.strftime("%d/%m/%Y at %H:%M")
+            print "     Ticket\tPoints"
+            tsum = 0
+            for ticket in tickets:
+                if(ticket[1] == 0):
+                    pass
+                else:
+                    print "     " + str(ticket[0]) + "  \t" + str(self.makePoints(ticket[1]))
+                    tsum += self.makePoints(ticket[1])
+            print "  Total: " + str(tsum)
 
     def report(self):
         tlist = self.db.getFullList()
