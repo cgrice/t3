@@ -74,12 +74,11 @@ class t3:
     est [ticket] [estimate] - estimate the amount of points needed for a ticket
     fin [ticket]            - mark a ticket as finished, but don't close it
     unfin [ticket]          - mark a ticket as unfinished
-    close [ticket]          - mark a ticket as closeed
-    open [ticket]           - re-open a closed ticket
-    purge                   - close all open tickets
+    clean                   - finish an iteration and close all tickets
     list | ls               - show currently open tickets
     status                  - show current ticket status and time spent
-    report                  - generate statistics for all open tickets'''
+    report                  - generate statistics for all open tickets
+    totals                  - show statistics for all finished iterations'''
     
 
     def punchedIn(self):
