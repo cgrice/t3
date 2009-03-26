@@ -59,6 +59,9 @@ class t3:
                 self.db.complete(args[1])
             elif arg == 'unfin':
                 self.db.uncomplete(args[1])
+            elif arg == 'totals':
+                self.totals()
+                break
             elif arg == 'help':
                 self.help()
                 break
