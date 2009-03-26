@@ -84,25 +84,6 @@ class t3DB:
             ttime = ttime + (timenow - timestamp)
         return ttime   
 
-    def getIterations(self, ticket):
-        self.cursor.execute('''SELECT update_id FROM updates WHERE ticket_number = \'-1\'''')
-        cleans = self.cursor.fetchall()
-        index = 0
-        for clean in cleans:
-            query = "SELECT timestamp, punched_in FROM updates WHERE ticket_number = ? AND update_id > ? "
-            try:  
-                starts = cleans[index][0]
-                ends = cleans[index+1][0]  
-                query += "AND update_id < ?"
-                self.cursor.execute(query, (ticket, starts, ends) )
-            except: 
-                starts = cleans[index][0]
-                self.cursor.execute(query, (ticket, starts,) )
-                pass
-            results = self.cursor.fetchall()
-            print 'New Iteration!'
-            print (ticket, self.timeForRange(results))
-            index += 1
 
     def getAllTickets(self):
         self.cursor.execute('''SELECT DISTINCT ticket_number FROM updates WHERE ticket_number != \'-1\'''')
