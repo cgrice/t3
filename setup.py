@@ -31,7 +31,7 @@ if can_install:
     os.system("sudo chmod a+x /usr/lib/t3/t3.py")
     os.system("sudo ln -s /usr/lib/t3/t3.py /usr/bin/t3")
     os.system(" mkdir ~/.t3")
-    os.system("touch ~/.t3/t3.conf")
+    os.system("cp ./t3.conf ~/.t3/t3.conf")
     print "Installed OK"
     print "Configuration options are in ~/.t3/t3.conf"
     
