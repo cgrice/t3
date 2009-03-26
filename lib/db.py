@@ -56,7 +56,10 @@ class t3DB:
         self.conn.commit()
 
     def timeForTicket(self, ticket):
-        self.cursor.execute("SELECT timestamp, punched_in FROM updates WHERE ticket_number = '" + str(ticket) + "'" )
+        self.cursor.execute('''SELECT MAX(update_id) FROM updates WHERE ticket_number = \'-1\'''')
+        results = self.cursor.fetchall()
+        cutoff = results[0][0]
+        self.cursor.execute("SELECT timestamp, punched_in FROM updates WHERE ticket_number = '" + str(ticket) + "' AND update_id > ?", (cutoff,) )
         results = self.cursor.fetchall()
         ttime = 0
         if len(results) < 1:
@@ -78,7 +81,10 @@ class t3DB:
         return ttime   
 
     def getTimeList(self):
-        self.cursor.execute('''SELECT DISTINCT updates.ticket_number FROM updates JOIN tickets ON updates.ticket_number = tickets.ticket_number WHERE tickets.open != 0''')
+        self.cursor.execute('''SELECT MAX(update_id) FROM updates WHERE ticket_number = \'-1\'''')
+        results = self.cursor.fetchall()
+        cutoff = results[0][0]
+        self.cursor.execute('''SELECT DISTINCT ticket_number FROM updates WHERE updates.update_id > ?''', (cutoff,))
         tickets = self.cursor.fetchall()
         tlist = []
         for ticket in tickets:
@@ -86,8 +92,10 @@ class t3DB:
         return tlist
     
     def getFullList(self):
-        self.cursor.execute('''SELECT DISTINCT ticket_number, complete FROM tickets 
-WHERE tickets.open != 0''')
+        self.cursor.execute('''SELECT MAX(update_id) FROM updates WHERE ticket_number = \'-1\'''')
+        results = self.cursor.fetchall()
+        cutoff = results[0][0]
+        self.cursor.execute('''SELECT DISTINCT updates.ticket_number, complete FROM updates LEFT JOIN tickets ON updates.ticket_number = tickets.ticket_number WHERE updates.update_id > ?''', (cutoff,))
         tickets = self.cursor.fetchall()
         tlist = []
         for ticket in tickets:
@@ -123,5 +131,6 @@ tickets WHERE ticket_number = ?''', (ticket,))
                 return r[0][0]
 
     def clean(self):
-        self.cursor.execute('''UPDATE tickets SET open = 0 WHERE 1''')
+        self.cursor.execute('''INSERT INTO updates(timestamp, ticket_number, punched_in)
+                               VALUES( ?, ?, ? )''', (time(), '-1', '-1'))
         self.conn.commit()
