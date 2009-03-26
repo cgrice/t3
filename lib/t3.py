@@ -58,6 +58,9 @@ class t3:
                 self.db.complete(args[1])
             elif arg == 'unfin':
                 self.db.uncomplete(args[1])
+            elif arg == 'totals':
+                self.totals()
+                break
             elif arg == 'help':
                 self.help()
                 break
@@ -141,11 +144,18 @@ class t3:
         dtime = time() - float(self.current_ticket['timestamp'])
         return self.formatTime(dtime)
 
+
     def makePoints(self, time):
         unit = self.conf['point_unit']
         hours = time / 60 / 60
         pointsdone = hours / unit   
         return round(pointsdone, 1)
+
+    def totals(self):
+        tlist = self.db.getAllTickets()
+        for t in tlist:
+            print self.db.getIterations(t[0])
+#        iterations = self.db.getIterations()
 
     def report(self):
         tlist = self.db.getFullList()
