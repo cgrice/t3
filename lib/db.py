@@ -95,7 +95,8 @@ WHERE tickets.open != 0''')
         return tlist
 
     def validTicket(self, ticket):
-        self.cursor.execute('''SELECT DISTINCT COUNT(ticket_number) FROM updates WHERE ticket_number = ?''', (ticket,))
+        self.cursor.execute('''SELECT DISTINCT COUNT(ticket_number) FROM
+tickets WHERE ticket_number = ?''', (ticket,))
         results = self.cursor.fetchall()
         if(results[0][0] > 0):
             return True
