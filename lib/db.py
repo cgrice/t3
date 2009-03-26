@@ -19,6 +19,7 @@ class t3DB:
                      ticket_number NOT NULL, punched_in BOOLEAN NOT NULL)''')
         self.cursor.execute('''CREATE TABLE tickets(ticket_number INTEGER PRIMARY KEY, estimate INTEGER, open INTEGER, complete INTEGER)''')
         self.conn.commit()
+        self.clean()
         
     def currentTicket(self):
         self.cursor.execute('''SELECT * FROM updates LIMIT 1 OFFSET (SELECT COUNT(update_id) FROM updates)-1''')
