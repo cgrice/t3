@@ -62,6 +62,8 @@ class t3:
             elif arg == 'totals':
                 self.totals()
                 break
+            elif arg == 'log':
+                self.log(args[1])
             elif arg == 'help':
                 self.help()
                 break
@@ -177,6 +179,20 @@ class t3:
                     print "     " + str(ticket[0]) + "  \t" + str(self.makePoints(ticket[1]))
                     tsum += self.makePoints(ticket[1])
             print "  Total: " + str(tsum)
+
+    def log(self, ticket):
+        logs = self.db.getLogsForTicket(ticket)
+        print "Log for ticket number " + str(ticket)
+        for log in logs:
+            status = ""
+            if log["status"] == 1: 
+                status = "Punched in"
+            elif log["status"] == 0:
+                status = "Punched out"
+            date = datetime.fromtimestamp(float(log["timestamp"]))
+            print "\n  "+date.strftime("%d/%m/%Y at %H:%M") + ":"
+            print "   "+status
+        
 
     def report(self):
         tlist = self.db.getFullList()

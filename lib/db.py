@@ -98,7 +98,7 @@ class t3DB:
                 itend = cleans[index+1][1]
                 self.cursor.execute(query, (ticket, starts, ends) )
             except: 
-                pass
+                break
             results = self.cursor.fetchall()
             iterations.append([itend, (ticket, self.timeForRange(results))])
             index += 1
@@ -108,6 +108,17 @@ class t3DB:
         self.cursor.execute('''SELECT DISTINCT ticket_number FROM updates WHERE ticket_number != \'-1\'''')
         tlist = self.cursor.fetchall()
         return tlist
+
+    def getLogsForTicket(self, ticket):
+        self.cursor.execute('''SELECT timestamp, punched_in FROM updates WHERE ticket_number = ?''', (ticket,))
+        results = self.cursor.fetchall()
+        logs = []
+        for result in results:
+            log = {}
+            log['status'] = result[1]
+            log['timestamp'] = result[0]
+            logs.append(log)
+        return logs
 
     def getTimeList(self):
         self.cursor.execute('''SELECT MAX(update_id) FROM updates WHERE ticket_number = \'-1\'''')
