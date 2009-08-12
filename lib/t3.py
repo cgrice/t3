@@ -50,7 +50,7 @@ class t3:
             elif arg == 'estimate' or arg == 'est':
                 ticket = args[1]
                 estimate = args[2]
-                self.db.makeEstimate(ticket, estimate)
+                self.makeEstimate(ticket, estimate)
             elif arg == 'report':
                 self.report()
             elif arg == 'purge' or arg == 'clean':
@@ -152,6 +152,10 @@ class t3:
         hours = time / 60 / 60
         pointsdone = hours / unit   
         return round(pointsdone, 1)
+
+    def makeEstimate(self, ticket, estimate):
+        self.db.makeEstimate(ticket, estimate)
+        self.db.update(ticket, 0)
 
     def totals(self):
         totals = {}
